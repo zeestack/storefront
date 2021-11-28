@@ -23,8 +23,9 @@ class Collection(models.Model):
 
 class Product(models.Model):
     title = models.CharField(max_length=255)
+    slug = models.SlugField()
     description = models.TextField()
-    price = models.DecimalField(max_digits=6, decimal_places=2)
+    unit_price = models.DecimalField(max_digits=6, decimal_places=2)
     inventory = models.IntegerField()
     last_update = models.DateTimeField(auto_now=True)
     collection = models.ForeignKey(Collection, on_delete=models.PROTECT)
@@ -35,11 +36,13 @@ class Customer(models.Model):
     MEMBORSHIP_BRONZE = "B"
     MEMBORSHIP_SILVER = "S"
     MEMBORSHIP_GOLD = "G"
+
     MEMBERSHIP_CHOICES = [
         (MEMBORSHIP_BRONZE, "Bronze"),
         (MEMBORSHIP_SILVER, "Silver"),
         (MEMBORSHIP_GOLD, "Gold"),
     ]
+
     first_name = models.CharField(max_length=255)
     last_name = models.CharField(max_length=255)
     email = models.EmailField(unique=True)
