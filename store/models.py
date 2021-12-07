@@ -19,6 +19,11 @@ class Collection(models.Model):
         "Product", on_delete=models.SET_NULL, null=True, related_name="+"
     )
     # related_name = "+" means telling Django not to create a reverse relationship to avoid circular dependancy clash
+    def __str__(self) -> str:
+        return self.title
+
+    class Meta:
+        ordering = ["title"]
 
 
 class Product(models.Model):
@@ -30,6 +35,12 @@ class Product(models.Model):
     last_update = models.DateTimeField(auto_now=True)
     collection = models.ForeignKey(Collection, on_delete=models.PROTECT)
     promotions = models.ManyToManyField(Promotion, related_name="Products")
+
+    def __str__(self) -> str:
+        return self.title
+
+    class Meta:
+        ordering = ["title"]
 
 
 class Customer(models.Model):
@@ -51,6 +62,9 @@ class Customer(models.Model):
     membership = models.CharField(
         max_length=1, choices=MEMBERSHIP_CHOICES, default=MEMBORSHIP_BRONZE
     )
+
+    class Meta:
+        ordering = ["first_name", "last_name"]
 
 
 class Order(models.Model):
