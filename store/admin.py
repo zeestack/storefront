@@ -1,5 +1,5 @@
 from typing import Reversible
-from django.contrib import admin
+from django.contrib import admin, messages
 from django.contrib.admin.filters import SimpleListFilter
 from django.db import models
 from django.db.models.query import QuerySet
@@ -7,6 +7,7 @@ from django.http.request import HttpRequest
 from django.urls import reverse
 from django.db.models.aggregates import Count
 from django.utils.html import format_html, urlencode
+
 from . import models
 
 # Register your models here.
@@ -15,6 +16,8 @@ from . import models
 @admin.register(models.Collection)
 class CollectionAdmin(admin.ModelAdmin):
     list_display = ["title", "product_count"]
+    search_fields = ["title"]
+    autocomplete_fields = ["featured_product"]
 
     @admin.display(ordering="product_count")
     def product_count(self, collection):
@@ -43,6 +46,8 @@ class InventoryFilter(admin.SimpleListFilter):
 
 @admin.register(models.Product)
 class ProdutAdmin(admin.ModelAdmin):
+    #    inlines = [TagInline]
+    actions = ["clear_inventory"]
     list_display = [
         "title",
         "unit_price",
@@ -54,6 +59,15 @@ class ProdutAdmin(admin.ModelAdmin):
     list_filter = ["collection", "last_update", InventoryFilter]
     list_per_page = 10
     list_select_related = ["collection"]
+    search_fields = ["title"]
+    # manipulating forms
+
+    # fields = ["title", "slug"]
+    # exclude = ["promotions"]
+    # readonly_fields = ["title"]
+    autocomplete_fields = ["collection"]
+
+    prepopulated_fields = {"slug": ["title"]}
 
     def collection_title(self, product):
         return product.collection.title
@@ -63,6 +77,13 @@ class ProdutAdmin(admin.ModelAdmin):
         if product.inventory < 10:
             return "Low"
         return "OK"
+
+    @admin.action(description="Clear Inventory")
+    def clear_inventory(self, request, queryset):
+        updated_count = queryset.update(inventory=0)
+        self.message_user(
+            request, f"{updated_count} successfully updated.", messages.ERROR
+        )
 
 
 @admin.register(models.Customer)
@@ -93,6 +114,16 @@ class CustomerAdmin(admin.ModelAdmin):
 # admin.site.register(models.Product, ProdutAdmin)
 
 
+class OrderItemInline(admin.TabularInline):
+    autocomplete_fields = ["product"]
+    model = models.OrderItem
+    extra = 0
+    # min_num = 1
+    # max_num = 10
+
+
 @admin.register(models.Order)
 class OrderAdmin(admin.ModelAdmin):
+    autocomplete_fields = ["customer"]
+    inlines = [OrderItemInline]
     list_display = ["id", "placed_at", "customer", "payment_status"]
