@@ -1,18 +1,46 @@
+from typing import Reversible
 from django.contrib import admin
 from django.db import models
+from django.urls import reverse
+from django.db.models.aggregates import Count
+from django.utils.html import format_html, urlencode
 from . import models
 
 # Register your models here.
 
 
-admin.site.register(models.Collection)
+@admin.register(models.Collection)
+class CollectionAdmin(admin.ModelAdmin):
+    list_display = ["title", "product_count"]
+
+    @admin.display(ordering="product_count")
+    def product_count(self, collection):
+        url = (
+            reverse("admin:store_product_changelist")
+            + "?"
+            + urlencode({"collection__id": str(collection.id)})
+        )
+        return format_html("<a href={}>{}</>", url, collection.product_count)
+
+    def get_queryset(self, request):
+        return super().get_queryset(request).annotate(product_count=Count("product"))
 
 
 @admin.register(models.Product)
 class ProdutAdmin(admin.ModelAdmin):
-    list_display = ["title", "unit_price", "inventory", "inventory_status"]
+    list_display = [
+        "title",
+        "unit_price",
+        "inventory",
+        "inventory_status",
+        "collection_title",
+    ]
     list_editable = ["unit_price"]
     list_per_page = 10
+    list_select_related = ["collection"]
+
+    def collection_title(self, product):
+        return product.collection.title
 
     @admin.display(ordering="inventory")
     def inventory_status(self, product):
@@ -30,3 +58,8 @@ class CustomerAdmin(admin.ModelAdmin):
 
 
 # admin.site.register(models.Product, ProdutAdmin)
+
+
+@admin.register(models.Order)
+class OrderAdmin(admin.ModelAdmin):
+    list_display = ["id", "placed_at", "customer", "payment_status"]
