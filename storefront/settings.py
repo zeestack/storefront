@@ -95,7 +95,7 @@ DATABASES = {
         "NAME": "storefront",
         "HOST": "localhost",
         "USER": "root",
-        "PASSWORD": "zeestack",
+        "PASSWORD": "zahid786",
     }
 }
 

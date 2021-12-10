@@ -1,20 +1,31 @@
 from typing import Reversible
+
 from django.contrib import admin, messages
 from django.contrib.admin.filters import SimpleListFilter
+from django.contrib.admin.views.main import ChangeList
 from django.db import models
+from django.db.models.aggregates import Count
+from django.db.models.expressions import OrderBy
 from django.db.models.query import QuerySet
 from django.http.request import HttpRequest
 from django.urls import reverse
-from django.db.models.aggregates import Count
+from django.urls.base import clear_url_caches
 from django.utils.html import format_html, urlencode
+from typing_extensions import OrderedDict
 
 from . import models
 
 # Register your models here.
 
 
+class UnorderedChangeList(ChangeList):
+    def get_ordering_field(self, field_name):
+        return None
+
+
 @admin.register(models.Collection)
 class CollectionAdmin(admin.ModelAdmin):
+
     list_display = ["title", "product_count"]
     search_fields = ["title"]
     autocomplete_fields = ["featured_product"]
@@ -26,10 +37,19 @@ class CollectionAdmin(admin.ModelAdmin):
             + "?"
             + urlencode({"collection__id": str(collection.id)})
         )
-        return format_html("<a href={}>{}</>", url, collection.product_count)
+        return format_html("<a href={}>{} Products</>", url, collection.product_count)
 
     def get_queryset(self, request):
-        return super().get_queryset(request).annotate(product_count=Count("product"))
+        print(request)
+        return (
+            super()
+            .get_queryset(request)
+            .annotate(product_count=Count("product"))
+            .order_by("-product_count")
+        )
+
+    def get_changelist(self, request, **kwargs):
+        return UnorderedChangeList
 
 
 class InventoryFilter(admin.SimpleListFilter):

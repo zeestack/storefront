@@ -1,10 +1,10 @@
 from django.core import validators
+from django.core.validators import MinValueValidator
 from django.db import models
 from django.db.models import constraints
 from django.db.models.deletion import SET_NULL
 from django.db.models.fields import EmailField
 from django.db.models.fields.related import ForeignKey
-from django.core.validators import MinValueValidator
 
 # Create your models here.
 
@@ -23,9 +23,6 @@ class Collection(models.Model):
     # related_name = "+" means telling Django not to create a reverse relationship to avoid circular dependancy clash
     def __str__(self) -> str:
         return self.title
-
-    class Meta:
-        ordering = ["title"]
 
 
 class Product(models.Model):

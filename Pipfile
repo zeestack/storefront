@@ -8,6 +8,8 @@ django = "*"
 django-debug-toolbar = "*"
 black = "*"
 mysqlclient = "*"
+colorama = "*"
+tzdata = "*"
 
 [dev-packages]
 black = "*"
